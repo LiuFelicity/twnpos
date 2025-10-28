@@ -7,6 +7,8 @@ git submodule update
 conda create -p .conda python=3.11
 conda activate ./.conda
 pip install -r requirements.txt
+
+bash download_ckpt.sh
 ```
 
 # Running
