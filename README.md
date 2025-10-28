@@ -7,6 +7,7 @@ git submodule update
 conda create -p .conda python=3.11
 conda activate ./.conda
 pip3 install -r requirements.txt
+conda install -c conda-forge tesseract
 
 bash download_ckpt.sh
 ```
