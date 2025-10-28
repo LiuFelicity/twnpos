@@ -1,0 +1,3 @@
+[submodule "TableNet"]
+	path = TableNet
+	url = git@github.com:AmanSavaria1402/TableNet.git
