@@ -6,3 +6,4 @@ tqdm
 opencv-python
 scikit-learn
 pytesseract
+gdown
