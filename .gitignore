@@ -64,6 +64,9 @@ bin/
 *.out
 *.class
 
+# Ignore outputs
+result/
+
 # 忽略壓縮檔
 *.zip
 *.tar.gz
