@@ -49,6 +49,7 @@ __pycache__/
 venv/
 env/
 .venv/
+.conda/
 *.pyc
 
 # 忽略編譯後的檔案和建構 (Build) 產物
@@ -62,6 +63,9 @@ bin/
 *.so
 *.out
 *.class
+
+# Ignore outputs
+result/
 
 # 忽略壓縮檔
 *.zip
