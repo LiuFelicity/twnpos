@@ -34,3 +34,13 @@ python batch_table_ocr.py --input ./scans --output ./csv_out
   - `detect_table_lines` 的 kernel 長度
   - `extract_cells_from_grid` 的大小和列群組閾值
 - 如果你要把「差額」欄位做數字清洗（移除逗號/括號→負號），我可以再加後處理規則。
+
+## 7. venv 使用
+- 建議使用虛擬環境（venv）來管理 Python 套件：
+```bash
+python -m venv ocr_env
+source ocr_env/bin/activate  # macOS/Linux
+ocr_env\Scripts\activate     # Windows
+pip install -r requirements.txt
+```
+- 執行完畢後可用 `deactivate` 離開虛擬環境。
