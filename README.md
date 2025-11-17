@@ -5,6 +5,9 @@ This script summarizes the content of a PDF document using the Gemini API.
 # Requirements
 - python 3.14
 
+[//]: # (python 3.10 also works but I don't like it)
+
+
 Install dependencies:
 ```
 pip3 install -r requirements.txt
