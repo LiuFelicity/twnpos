@@ -6,7 +6,10 @@ import dotenv
 
 dotenv.load_dotenv()
 
-client = genai.Client(api_key = dotenv.get_key('.env', 'GEMINI_API_KEY'))
+api_key = dotenv.get_key('.env', 'GEMINI_API_KEY')
+if api_key is None:
+    raise RuntimeError("GEMINI_API_KEY not found in .env file. Please set it before running this script.")
+client = genai.Client(api_key=api_key)
 
 # Retrieve and encode the PDF byte
 filepath = pathlib.Path('report.pdf')
