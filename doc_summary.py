@@ -1,8 +1,13 @@
 from google import genai
 from google.genai import types
+import argparse
 import pathlib
 
 import dotenv
+
+parser = argparse.ArgumentParser()
+parser.add_argument('file', type=pathlib.Path, help='Path to the PDF file to summarize')
+args = parser.parse_args()
 
 dotenv.load_dotenv()
 
@@ -12,7 +17,7 @@ if api_key is None:
 client = genai.Client(api_key=api_key)
 
 # Retrieve and encode the PDF byte
-filepath = pathlib.Path('report.pdf')
+filepath = args.file
 
 prompt = "Summarize this document"
 response = client.models.generate_content(
