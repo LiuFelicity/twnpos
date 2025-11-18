@@ -26,14 +26,17 @@ VALUE_COL_INDEX = 4   # 第 E 欄 '金額（萬元）（手動調整）'
 file_path = args.input_file
 
 # --- 2. 讀取與準備資料 --- (保持不變)
-try:
-    df = pd.read_excel(file_path, header=0) 
-except FileNotFoundError:
-    sys.stderr.write(f"!!! 錯誤：找不到檔案。\n")
+if not os.path.isfile(file_path):
+    sys.stderr.write("!!! 錯誤：找不到檔案。\n")
     sys.exit(1)
+
+if file_path.lower().endswith('.csv'):
+    if file_path.endswith('.csv'):
+        df = pd.read_csv(file_path, header=0)
+    else:
+        df = pd.read_excel(file_path, header=0)
 except Exception as e:
-    sys.stderr.write(f"讀取檔案時出錯: {e}\n")
-    sys.exit(1)
+    raise SystemExit(f"讀取檔案時出錯: {e}\n")
 
 # --- 3. 透過索引取得欄位名稱 --- (保持不變)
 try:
@@ -41,7 +44,7 @@ try:
     target_col = df.columns[TARGET_COL_INDEX]
     value_col = df.columns[VALUE_COL_INDEX]
 except IndexError:
-    sys.stderr.write(f"!!! 錯誤：欄位索引超出範圍。\n")
+    sys.stderr.write("!!! 錯誤：欄位索引超出範圍。\n")
     sys.exit(1)
 
 print(f"--- 成功讀取檔案: {file_path} ---")
@@ -89,7 +92,7 @@ root_nodes = [label for label in all_labels if label not in all_targets and node
 total_sum = sum(node_totals[root] for root in root_nodes)
 value_threshold = total_sum * (args.node_percentage / 100)
 
-print(f"--- 處理中 ---")
+print("--- 處理中 ---")
 print(f"總收入 (根節點 tổng hợp): {total_sum:,.2f}")
 print(f"節點標籤顯示門檻: {args.node_percentage}% ( > {value_threshold:,.2f} 萬元)")
 print("---------------\n")
@@ -167,5 +170,5 @@ output_file_path = os.path.join(output_dir, output_name)
 
 c.render(output_file_path)
 
-print(f"Pyecharts Sankey 圖表已成功生成！")
+print("Pyecharts Sankey 圖表已成功生成！")
 print(f"檔案已儲存為: {os.path.realpath(output_file_path)}")
