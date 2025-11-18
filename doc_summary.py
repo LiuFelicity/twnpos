@@ -76,16 +76,6 @@ def call_gemini_with_retry(
 # Helpers: extract and validate CSV code block
 # ---------------------------
 
-def extract_csv_code_block(text: str):
-    lines = text.splitlines()
-    if len(lines) < 3:
-        return None, "Response too short to contain a CSV code block"
-    if lines[0].strip() != "```csv":
-        return None, "First line is not ```csv"
-    if lines[-1].strip() != "```":
-        return None, "Last line is not ```"
-    return "\n".join(lines[1:-1]), None
-
 def is_valid_csv(csv_str: str) -> bool:
     try:
         # Try to parse; ensure at least one row and consistent column counts
@@ -101,6 +91,19 @@ def is_valid_csv(csv_str: str) -> bool:
     except Exception as e:
         print(f"Unexpected error during CSV validation: {e}", file=sys.stderr)
         return False
+
+def extract_csv_code_block(text: str):
+    lines = text.splitlines()
+    if len(lines) < 3:
+        return None, "Response too short to contain a CSV code block"
+    if lines[0].strip() != "```csv":
+        return None, "First line is not ```csv"
+    if lines[-1].strip() != "```":
+        return None, "Last line is not ```"
+    middle = "\n".join(lines[1:-1])
+    if not is_valid_csv(middle):
+        return None, "Content inside code block is not valid CSV"
+    return middle, None
 
 # ---------------------------
 # Run
