@@ -1,3 +1,34 @@
+# Gemini document understanding
+
+This script summarizes the content of a PDF document using the Gemini API.
+
+# Requirements
+- python 3.14
+
+[//]: # (python 3.10 also works but I don't like it)
+
+Install dependencies:
+```
+pip3 install -r requirements.txt
+```
+
+Put your API key in a `.env` file in the same directory as the script:
+
+```
+GEMINI_API_KEY="your_api_key_here"
+```
+
+# Usage
+
+Optionally download a sample PDF
+```
+bash get_pdf.sh
+```
+
+Summarize a PDF document by providing the file path as an argument:
+```
+python3 doc_summary.py report.pdf
+```
 # Excel to Sankey Diagram Generator (Excel 轉 Sankey 圖表產生器)
 
 這是一個 Python 腳本，用於讀取特定格式的 Excel 檔案，並自動產生一個互動式的 Sankey (桑基圖) 視覺化圖表 (HTML 檔案)。
