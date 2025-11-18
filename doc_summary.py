@@ -37,7 +37,7 @@ prompt = prompt_path.read_text(encoding="utf-8")
 def call_gemini_with_retry(
     pdf_path: pathlib.Path,
     prompt: str,
-    model: str = "gemini-2.5-flash",
+    model: str = "gemini-2.5-pro",
     max_retries: int = 5,
     base_delay: float = 1.0,  # seconds
 ):
