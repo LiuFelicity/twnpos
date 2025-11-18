@@ -107,6 +107,10 @@ def is_valid_csv(csv_str: str) -> bool:
 # ---------------------------
 
 response = call_gemini_with_retry(filepath, prompt)
+if response is None or response.text is None:
+    print("No response from model", file=sys.stderr)
+    sys.exit(1)
+
 csv_block, err = extract_csv_code_block(response.text)
 if csv_block is None:
     print(f"Invalid response format: {err}", file=sys.stderr)
