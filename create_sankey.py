@@ -30,8 +30,8 @@ if not os.path.isfile(file_path):
     sys.stderr.write("!!! 錯誤：找不到檔案。\n")
     sys.exit(1)
 
-if file_path.lower().endswith('.csv'):
-    if file_path.endswith('.csv'):
+try:
+    if file_path.lower().endswith('.csv'):
         df = pd.read_csv(file_path, header=0)
     else:
         df = pd.read_excel(file_path, header=0)
