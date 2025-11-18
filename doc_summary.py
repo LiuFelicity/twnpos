@@ -100,7 +100,7 @@ def extract_csv_code_block(text: str):
         return None, "First line is not ```csv"
     if lines[-1].strip() != "```":
         return None, "Last line is not ```"
-    middle = "\n".join(lines[1:-1])
+    middle = "\n".join(lines[1:-1]) + "\n"
     if not is_valid_csv(middle):
         return None, "Content inside code block is not valid CSV"
     return middle, None
@@ -120,7 +120,4 @@ if csv_block is None:
     sys.exit(2)
 
 # Only output the CSV lines in between, nothing else
-if not csv_block.endswith("\n"):
-    csv_block += "\n"
 sys.stdout.write(csv_block)
-
