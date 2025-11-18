@@ -64,7 +64,8 @@ def call_gemini_with_retry(
                 delay = base_delay * (2 ** (attempt - 1))  # 1, 2, 4, 8, ...
                 print(
                     f"[retry {attempt}/{max_retries}] "
-                    f"Server overloaded (503). Sleeping {delay:.1f}s..."
+                    f"Server overloaded (503). Sleeping {delay:.1f}s...",
+                    file=sys.stderr,
                 )
                 time.sleep(delay)
             else:
