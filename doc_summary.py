@@ -119,10 +119,6 @@ if csv_block is None:
     print(f"Invalid response format: {err}", file=sys.stderr)
     sys.exit(2)
 
-if not is_valid_csv(csv_block):
-    print("Invalid CSV content inside code block", file=sys.stderr)
-    sys.exit(3)
-
 # Only output the CSV lines in between, nothing else
 if not csv_block.endswith("\n"):
     csv_block += "\n"
