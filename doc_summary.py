@@ -64,7 +64,8 @@ def call_gemini_with_retry(
                 delay = base_delay * (2 ** (attempt - 1))  # 1, 2, 4, 8, ...
                 print(
                     f"[retry {attempt}/{max_retries}] "
-                    f"Server overloaded (503). Sleeping {delay:.1f}s..."
+                    f"Server overloaded (503). Sleeping {delay:.1f}s...",
+                    file=sys.stderr,
                 )
                 time.sleep(delay)
             else:
@@ -74,16 +75,6 @@ def call_gemini_with_retry(
 # ---------------------------
 # Helpers: extract and validate CSV code block
 # ---------------------------
-
-def extract_csv_code_block(text: str):
-    lines = text.splitlines()
-    if len(lines) < 3:
-        return None, "Response too short to contain a CSV code block"
-    if lines[0].strip() != "```csv":
-        return None, "First line is not ```csv"
-    if lines[-1].strip() != "```":
-        return None, "Last line is not ```"
-    return "\n".join(lines[1:-1]), None
 
 def is_valid_csv(csv_str: str) -> bool:
     try:
@@ -101,22 +92,32 @@ def is_valid_csv(csv_str: str) -> bool:
         print(f"Unexpected error during CSV validation: {e}", file=sys.stderr)
         return False
 
+def extract_csv_code_block(text: str):
+    lines = text.splitlines()
+    if len(lines) < 3:
+        return None, "Response too short to contain a CSV code block"
+    if lines[0].strip() != "```csv":
+        return None, "First line is not ```csv"
+    if lines[-1].strip() != "```":
+        return None, "Last line is not ```"
+    middle = "\n".join(lines[1:-1]) + "\n"
+    if not is_valid_csv(middle):
+        return None, "Content inside code block is not valid CSV"
+    return middle, None
+
 # ---------------------------
 # Run
 # ---------------------------
 
 response = call_gemini_with_retry(filepath, prompt)
+if response is None or response.text is None:
+    print("No response from model", file=sys.stderr)
+    sys.exit(1)
+
 csv_block, err = extract_csv_code_block(response.text)
-if err:
+if csv_block is None:
     print(f"Invalid response format: {err}", file=sys.stderr)
     sys.exit(2)
 
-if not is_valid_csv(csv_block):
-    print("Invalid CSV content inside code block", file=sys.stderr)
-    sys.exit(3)
-
 # Only output the CSV lines in between, nothing else
-if not csv_block.endswith("\n"):
-    csv_block += "\n"
 sys.stdout.write(csv_block)
-
