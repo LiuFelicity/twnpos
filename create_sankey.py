@@ -26,14 +26,17 @@ VALUE_COL_INDEX = 4   # 第 E 欄 '金額（萬元）（手動調整）'
 file_path = args.input_file
 
 # --- 2. 讀取與準備資料 --- (保持不變)
-try:
-    df = pd.read_excel(file_path, header=0) 
-except FileNotFoundError:
+if not os.path.isfile(file_path):
     sys.stderr.write("!!! 錯誤：找不到檔案。\n")
     sys.exit(1)
+
+if file_path.lower().endswith('.csv'):
+    if file_path.endswith('.csv'):
+        df = pd.read_csv(file_path, header=0)
+    else:
+        df = pd.read_excel(file_path, header=0)
 except Exception as e:
-    sys.stderr.write(f"讀取檔案時出錯: {e}\n")
-    sys.exit(1)
+    raise SystemExit(f"讀取檔案時出錯: {e}\n")
 
 # --- 3. 透過索引取得欄位名稱 --- (保持不變)
 try:
