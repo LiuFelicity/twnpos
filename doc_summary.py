@@ -3,8 +3,10 @@ from google.genai import types, errors
 import argparse
 import pathlib
 import time
-
+import csv
+import sys
 import dotenv
+import io
 
 # ---------------------------
 # CLI / env setup
@@ -70,9 +72,51 @@ def call_gemini_with_retry(
                 raise
 
 # ---------------------------
+# Helpers: extract and validate CSV code block
+# ---------------------------
+
+def extract_csv_code_block(text: str):
+    lines = text.splitlines()
+    if len(lines) < 3:
+        return None, "Response too short to contain a CSV code block"
+    if lines[0].strip() != "```csv":
+        return None, "First line is not ```csv"
+    if lines[-1].strip() != "```":
+        return None, "Last line is not ```"
+    return "\n".join(lines[1:-1]), None
+
+def is_valid_csv(csv_str: str) -> bool:
+    try:
+        # Try to parse; ensure at least one row and consistent column counts
+        f = io.StringIO(csv_str)
+        reader = csv.reader(f)
+        rows = list(reader)
+        if not rows:
+            return False
+        width = len(rows[0])
+        if width == 0:
+            return False
+        return all(len(r) == width for r in rows)
+    except Exception as e:
+        print(f"Unexpected error during CSV validation: {e}", file=sys.stderr)
+        return False
+
+# ---------------------------
 # Run
 # ---------------------------
 
 response = call_gemini_with_retry(filepath, prompt)
-print(response.text)
+csv_block, err = extract_csv_code_block(response.text)
+if err:
+    print(f"Invalid response format: {err}", file=sys.stderr)
+    sys.exit(2)
+
+if not is_valid_csv(csv_block):
+    print("Invalid CSV content inside code block", file=sys.stderr)
+    sys.exit(3)
+
+# Only output the CSV lines in between, nothing else
+if not csv_block.endswith("\n"):
+    csv_block += "\n"
+sys.stdout.write(csv_block)
 
