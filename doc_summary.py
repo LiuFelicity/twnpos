@@ -13,6 +13,7 @@ import io
 # ---------------------------
 parser = argparse.ArgumentParser()
 parser.add_argument("file", type=pathlib.Path, help="Path to the PDF file to summarize")
+parser.add_argument("output", type=pathlib.Path, help="Path to output CSV file")
 args = parser.parse_args()
 
 dotenv.load_dotenv()
@@ -26,6 +27,7 @@ if api_key is None:
 client = genai.Client(api_key=api_key)
 
 filepath = args.file
+output_path = args.output
 
 script_dir = pathlib.Path(__file__).resolve().parent
 prompt_path = script_dir / "prompt.txt"
@@ -120,4 +122,4 @@ if csv_block is None:
     sys.exit(2)
 
 # Only output the CSV lines in between, nothing else
-sys.stdout.write(csv_block)
+output_path.write_text(csv_block, encoding="utf-8")
