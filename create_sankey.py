@@ -170,7 +170,8 @@ c = (
         )
     )
     .set_global_opts(
-        title_opts=opts.TitleOpts(title="財務流向 Sankey 圖 (Pyecharts)"),
+        title_opts=opts.TitleOpts(title=""),
+        legend_opts=opts.LegendOpts(is_show=False),
         tooltip_opts=opts.TooltipOpts(
             trigger="item",
             trigger_on="mousemove",
