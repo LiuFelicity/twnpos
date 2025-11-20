@@ -25,7 +25,7 @@ VALUE_COL_INDEX = 4   # 第 E 欄 '金額（萬元）（手動調整）'
 # 使用參數傳入的檔案路徑
 file_path = args.input_file
 
-# --- 2. 讀取與準備資料 --- (保持不變)
+# --- 2. 讀取與準備資料 ---
 if not os.path.isfile(file_path):
     sys.stderr.write("!!! 錯誤：找不到檔案。\n")
     sys.exit(1)
@@ -38,7 +38,7 @@ try:
 except Exception as e:
     raise SystemExit(f"讀取檔案時出錯: {e}\n")
 
-# --- 3. 透過索引取得欄位名稱 --- (保持不變)
+# --- 3. 透過索引取得欄位名稱 ---
 try:
     source_col = df.columns[SOURCE_COL_INDEX]
     target_col = df.columns[TARGET_COL_INDEX]
@@ -93,7 +93,7 @@ total_sum = sum(node_totals[root] for root in root_nodes)
 value_threshold = total_sum * (args.node_percentage / 100)
 
 print("--- 處理中 ---")
-print(f"總收入 (根節點 tổng hợp): {total_sum:,.2f}")
+print(f"總收入 (根節點總和): {total_sum:,.2f}")
 print(f"節點標籤顯示門檻: {args.node_percentage}% ( > {value_threshold:,.2f} 萬元)")
 print("---------------\n")
 
@@ -101,12 +101,22 @@ print("---------------\n")
 node_total_list = []
 for label in all_labels:
     node_total_list.append((label, node_totals.get(label, 0)))
-    
-node_total_list.sort(key=lambda x: x[1], reverse=True)
+
+# 自訂排序邏輯 
+def custom_sort_key(item):
+    label, total = item
+    if "本期短絀" in label:
+        return -float('inf')
+    if "本期餘絀" in label:
+        return -float('inf')
+    return total
+
+node_total_list.sort(key=custom_sort_key, reverse=True)
 
 nodes_data = []
 for label, node_total in node_total_list:
     
+    # 1. 建立標籤設定
     node_label_opts = opts.LabelOpts(
         is_show=True, position="right", formatter="{b}", font_size=10
     )
@@ -120,19 +130,31 @@ for label, node_total in node_total_list:
             font_weight="bold" 
         )
 
-    nodes_data.append({
+    # 2. 建立基本節點字典
+    node_data_item = {
         "name": label,
         "label": node_label_opts 
-    })
+    }
+
+    # 3. ★★★ 強制顏色覆蓋 (Force Color Override) ★★★
+    # 這裡我們使用底層的 "itemStyle" 鍵值，而不是 wrapper，這權重更高。
+    if "本期餘絀" in label:
+        node_data_item["itemStyle"] = {"color": "#2C7BB6", "borderColor": "#2C7BB6"}
+    
+    elif "本期短絀" in label:
+        node_data_item["itemStyle"] = {"color": "#11B795", "borderColor": "#11B795"}
+
+    nodes_data.append(node_data_item)
 
 # --- 5. 建立 Sankey 圖表 (Pyecharts) ---
 c = (
     Sankey()
     .add(
         series_name="財務流向",
-        nodes=nodes_data, # 傳入排序過的 nodes_data
+        nodes=nodes_data, 
         links=links_data,
         node_align="left", 
+        layout_iterations=0, # 關閉自動佈局
         levels=[
             opts.SankeyLevelsOpts(depth=0, itemstyle_opts=opts.ItemStyleOpts(color="#ABD9E9")),
             opts.SankeyLevelsOpts(depth=1, itemstyle_opts=opts.ItemStyleOpts(color="#2C7BB6")),
