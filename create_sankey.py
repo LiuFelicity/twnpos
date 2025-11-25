@@ -80,7 +80,7 @@ for idx, row in df.iterrows():
     node_sum_in[target_name] += value
     node_sum_out[source_name] += value
 
-# --- 4B. 計算門檻 ---
+# --- 4B. 計算門檻與所有標籤 ---
 all_labels = list(pd.concat([df[source_col], df[target_col]]).unique())
 node_totals = {}
 for label in all_labels:
@@ -97,24 +97,54 @@ print(f"總收入 (根節點總和): {total_sum:,.2f}")
 print(f"節點標籤顯示門檻: {args.node_percentage}% ( > {value_threshold:,.2f} 萬元)")
 print("---------------\n")
 
-# --- 4C. 建立排序過的 Nodes ★ --- 
-node_total_list = []
-for label in all_labels:
-    node_total_list.append((label, node_totals.get(label, 0)))
+# --- 4C. ★★★ 智慧分層排序 (Smart Layered Sort) ★★★ ---
 
-# 自訂排序邏輯 
-def custom_sort_key(item):
-    label, total = item
-    if "本期短絀" in label:
-        return -float('inf')
-    if "本期餘絀" in label:
-        return -float('inf')
-    return total
+# 1. 建立層級 (BFS)
+layers = defaultdict(list)
+node_depth = {}
 
-node_total_list.sort(key=custom_sort_key, reverse=True)
+current_layer_nodes = sorted(root_nodes, key=lambda x: node_totals[x], reverse=True)
+# 特殊處理：把短絀/餘絀移到該層最後
+special_nodes = [n for n in current_layer_nodes if "短絀" in n or "餘絀" in n]
+normal_nodes = [n for n in current_layer_nodes if n not in special_nodes]
+current_layer_nodes = normal_nodes + special_nodes
 
+for node in current_layer_nodes:
+    node_depth[node] = 0
+    layers[0].append(node)
+
+depth = 0
+while current_layer_nodes:
+    next_layer_nodes = []
+    for parent in current_layer_nodes:
+        children = df[df[source_col] == parent][target_col].unique()
+        children = sorted(children, key=lambda x: node_totals[x], reverse=True)
+        
+        for child in children:
+            if child not in node_depth: 
+                node_depth[child] = depth + 1
+                layers[depth + 1].append(child)
+                next_layer_nodes.append(child)
+    
+    depth += 1
+    current_layer_nodes = next_layer_nodes
+
+# 2. 建立最終的排序列表
+final_sorted_nodes = []
+for d in sorted(layers.keys()):
+    layer_nodes = layers[d]
+    
+    # 在每一層內部，再次確保 "短絀/餘絀" 在最後面
+    layer_special = [n for n in layer_nodes if "短絀" in n or "餘絀" in n]
+    layer_normal = [n for n in layer_nodes if n not in layer_special]
+    
+    final_sorted_nodes.extend(layer_normal)
+    final_sorted_nodes.extend(layer_special)
+
+# --- 4D. 建立 Nodes Data (包含強制上色) ---
 nodes_data = []
-for label, node_total in node_total_list:
+for label in final_sorted_nodes:
+    node_total = node_totals[label]
     
     # 1. 建立標籤設定
     node_label_opts = opts.LabelOpts(
@@ -130,19 +160,22 @@ for label, node_total in node_total_list:
             font_weight="bold" 
         )
 
-    # 2. 建立基本節點字典
+    # 2. 建立基本節點資料
     node_data_item = {
         "name": label,
         "label": node_label_opts 
     }
 
-    # 3. ★★★ 強制顏色覆蓋 (Force Color Override) ★★★
-    # 這裡我們使用底層的 "itemStyle" 鍵值，而不是 wrapper，這權重更高。
-    if "本期餘絀" in label:
-        node_data_item["itemStyle"] = {"color": "#2C7BB6", "borderColor": "#2C7BB6"}
+    # 3. ★★★ 強力上色 (使用 itemStyle 原始字典) ★★★
+    # 這能繞過 Pyecharts 的 levels 覆蓋
     
-    elif "本期短絀" in label:
+    if "餘絀" in label: # 包含 "餘絀" (盈餘) -> 深藍色
+        node_data_item["itemStyle"] = {"color": "#2C7BB6", "borderColor": "#2C7BB6"}
+        print(f"-> 強制上色 (藍): {label}")
+    
+    elif "短絀" in label: # 包含 "短絀" (虧損) -> 綠色
         node_data_item["itemStyle"] = {"color": "#11B795", "borderColor": "#11B795"}
+        print(f"-> 強制上色 (綠): {label}")
 
     nodes_data.append(node_data_item)
 
@@ -154,7 +187,10 @@ c = (
         nodes=nodes_data, 
         links=links_data,
         node_align="left", 
-        layout_iterations=0, # 關閉自動佈局
+        
+        # 保持關閉自動佈局，依賴我們的「智慧分層排序」
+        layout_iterations=0, 
+        
         levels=[
             opts.SankeyLevelsOpts(depth=0, itemstyle_opts=opts.ItemStyleOpts(color="#ABD9E9")),
             opts.SankeyLevelsOpts(depth=1, itemstyle_opts=opts.ItemStyleOpts(color="#2C7BB6")),
