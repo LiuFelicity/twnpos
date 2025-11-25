@@ -20,7 +20,7 @@ args = parser.parse_args()
 # --- 1. 設定固定參數 ---
 SOURCE_COL_INDEX = 0  # 第 A 欄 '來源'
 TARGET_COL_INDEX = 1  # 第 B 欄 '目標'
-VALUE_COL_INDEX = 4   # 第 E 欄 '金額（萬元）（手動調整）'
+VALUE_COL_INDEX = 3   # 第 E 欄 '金額（萬元）（手動調整）'
 
 # 使用參數傳入的檔案路徑
 file_path = args.input_file
